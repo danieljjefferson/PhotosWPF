@@ -3,12 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <TextBox Name="Source" HorizontalAlignment="Left" Height="23" Margin="85,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="422"/>
-        <TextBox Name="Destination" HorizontalAlignment="Left" Height="23" Margin="85,38,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="422"/>
-        <TextBox Name="LogBox" HorizontalAlignment="Left" Height="171" Margin="10,138,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="497"/>
-        <Button Content="Go" HorizontalAlignment="Left" Margin="10,67,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+        <TextBox Name="Source" HorizontalAlignment="Left" Height="23" Margin="85,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="336"/>
+        <TextBox Name="Destination" HorizontalAlignment="Left" Height="23" Margin="85,38,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="336"/>
+        <TextBox Name="LogBox" Margin="10,138,10,10" TextWrapping="Wrap"/>
+        <Button Content="Go" HorizontalAlignment="Left" Margin="10,67,0,0" VerticalAlignment="Top" Width="75" Click="Go_Click" Height="23"/>
         <Label Content="Source" HorizontalAlignment="Left" Margin="34,10,0,0" VerticalAlignment="Top"/>
         <Label Content="Destination" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top"/>
+        <Button Content="Dump" HorizontalAlignment="Left" Margin="426,10,0,0" VerticalAlignment="Top" Width="81" Height="23" Click="DumpBtn_Click"/>
+        <Button Content="Photos" HorizontalAlignment="Left" Margin="426,38,0,0" VerticalAlignment="Top" Width="81" Height="23" Click="PhotosBtn_Click"/>
 
     </Grid>
 </Window>
