@@ -47,13 +47,18 @@ namespace PhotosWPF
 
         void Source_TextChanged(object sender, TextChangedEventArgs e)
         {
+            //if the source.text is empty then disable the run button
             if (Source.Text.Length < 1)
             {
                 Log("Source is Empty!");
                 GoBtn.IsEnabled = false;
             }
-            else if(!GoBtn.IsEnabled)
+            else if(!GoBtn.IsEnabled) //only enable the button if is disabled
                 GoBtn.IsEnabled = true;
+
+            //TODO: Get the available file types in the source folder - I want to allow users to select file types to be organized
+            // maybe the button shouldn't be enabled until we have all the types ready?
+            //possibly create a 'advanced' and 'basic' mode to allow users to run from a known set of types - regardless of what is found in the folder[s]
             
         }
 
@@ -71,6 +76,8 @@ namespace PhotosWPF
 
             try
             {
+                //TODO: Get files in sub folders
+
                 //get all files from the source
                 foreach (var filename in Directory.GetFiles(src))
                 {
