@@ -137,6 +137,11 @@ namespace PhotosWPF
                 month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
                 path.Append("\\").Append(year);
 
+                ////create a 'Duplicates' folder in each 'Year' to catch possible duplicate files
+                //string duplicate_path = System.IO.Path.Combine(path.ToString(), "Duplicates");
+                //if (!Directory.Exists(duplicate_path))
+                //    Directory.CreateDirectory(duplicate_path);
+
                 if(list.Value.Count >= 5) //5 or more photos from a specific date
                 {
                     day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
@@ -178,7 +183,23 @@ namespace PhotosWPF
             foreach (var file in photos)
             {
                 string new_file = System.IO.Path.Combine(dest, file.FileName);
-                File.Move(file.FullPath, new_file);
+                try
+                {
+                    File.Move(file.FullPath, new_file);
+                }
+                catch(IOException ioe)
+                {
+                    Directory.CreateDirectory(System.IO.Path.Combine(dest, "Duplicates"));
+                    new_file = System.IO.Path.Combine(dest, "Duplicates", file.FileName);
+                    try
+                    {
+                        File.Move(file.FullPath, new_file);
+                    }
+                    catch(IOException ioe2)
+                    {
+                        Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
+                    }
+                }
             }
         }
 
