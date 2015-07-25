@@ -32,6 +32,9 @@ namespace PhotosWPF
         private static String[] DEFAULT_FILE_TYPES = { ".jpg", ".cr2" };
         private static Regex r = new Regex(":");
 
+        private List<MyImage> photos = new List<MyImage>();
+        private Dictionary<DateTime, List<MyImage>> photoDict = new Dictionary<DateTime, List<MyImage>>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -41,14 +44,11 @@ namespace PhotosWPF
         {
             //get the source and destination
             String src = Source.Text;
-            String dest = Destination.Text;
+            String dest = Destination.Text == "" ? Source.Text : Destination.Text;
 
             Log("Button Clicked!");
             Log("Source: " + src);
             Log("Destination: " + dest);
-
-            List<MyImage> photos = new List<MyImage>();
-            Dictionary<DateTime, List<MyImage>> photoDict = new Dictionary<DateTime, List<MyImage>>();
 
             try
             {
@@ -95,12 +95,65 @@ namespace PhotosWPF
                 Log("Date: " + list.Key + " Photos: " + list.Value.Count);
             }
 
+            BuildFileSystem(dest);
+
+        }
+
+        private void BuildFileSystem(string destination)
+        {
+            string year, month, day;
+            
+
+            foreach(var list in photoDict)
+            {
+                StringBuilder path = new StringBuilder(destination);
+                year = list.Key.Year.ToString();
+                month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
+                path.Append("\\").Append(year);
+
+                if(list.Value.Count >= 5) //5 or more photos from a specific date
+                {
+                    day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
+                    path.Append("\\").Append(month).Append(".").Append(day).Append(" (Description Needed)");
+                }
+                else
+                {
+                    path.Append("\\").Append(month).Append(" Misc");
+                }
+
+                if (!Directory.Exists(path.ToString()))
+                    Directory.CreateDirectory(path.ToString());
+
+                if(true)
+                    MovePhotos(list.Value, path.ToString());
+                else
+                    CopyPhotos(list.Value, path.ToString());
+                path = null;
+            }
         }
 
         public void Log(String message)
         {
             logger.AppendLine(message);
             LogBox.Text = logger.ToString();
+        }
+
+        private void CopyPhotos(List<MyImage> photos, String dest)
+        {
+            foreach(var file in photos)
+            {
+                string new_file = System.IO.Path.Combine(dest, file.FileName);
+                File.Copy(file.FullPath, new_file);
+            }
+        }
+
+        private void MovePhotos(List<MyImage> photos, String dest)
+        {
+            foreach (var file in photos)
+            {
+                string new_file = System.IO.Path.Combine(dest, file.FileName);
+                File.Move(file.FullPath, new_file);
+            }
         }
 
         private void PhotosBtn_Click(object sender, RoutedEventArgs e)
