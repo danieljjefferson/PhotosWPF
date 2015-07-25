@@ -29,8 +29,11 @@ namespace PhotosWPF
 
         private static String DEFAULT_SOURCE = @"C:\Users\Daniel\Pictures\Dump";
         private static String DEFAULT_DESTINATION = @"C:\Users\Daniel\Pictures\";
-        private static String[] DEFAULT_FILE_TYPES = { ".jpg", ".cr2" };
+        private static String images_pattern = @"\.jpg|\.cr2";
+        private static String videos_pattern = @"\.mp4|\.mts|\.mov";
         private static Regex r = new Regex(":");
+        
+        private Regex type_regex;
 
         private List<MyImage> photos = new List<MyImage>();
         private Dictionary<DateTime, List<MyImage>> photoDict = new Dictionary<DateTime, List<MyImage>>();
@@ -38,6 +41,20 @@ namespace PhotosWPF
         public MainWindow()
         {
             InitializeComponent();
+
+            Source.TextChanged += Source_TextChanged;
+        }
+
+        void Source_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (Source.Text.Length < 1)
+            {
+                Log("Source is Empty!");
+                GoBtn.IsEnabled = false;
+            }
+            else if(!GoBtn.IsEnabled)
+                GoBtn.IsEnabled = true;
+            
         }
 
         private void Go_Click(object sender, RoutedEventArgs e)
@@ -45,6 +62,8 @@ namespace PhotosWPF
             //get the source and destination
             String src = Source.Text;
             String dest = Destination.Text == "" ? Source.Text : Destination.Text;
+
+            type_regex = new Regex(images_pattern);
 
             Log("Button Clicked!");
             Log("Source: " + src);
@@ -56,7 +75,7 @@ namespace PhotosWPF
                 foreach (var filename in Directory.GetFiles(src))
                 {
                     var fileInfo = new FileInfo(filename);
-                    if(fileInfo.Extension.ToLower().Contains(".jpg") || fileInfo.Extension.ToLower().Contains(".cr2"))
+                    if(type_regex.IsMatch(fileInfo.Extension.ToLower()))
                     {
                         photos.Add(new MyImage
                         {
