@@ -68,6 +68,10 @@ namespace PhotosWPF
             String src = Source.Text;
             String dest = Destination.Text == "" ? Source.Text : Destination.Text;
 
+            //if photos are being organized the 'images_pattern' needs to be used.
+            //videos are a slightly different problem since there does not seem to be any standard
+            //of how the date created is written.  I could possibly use the "Modifed Date" and match that against the file
+            //name which typically has the data as part of the file name
             type_regex = new Regex(images_pattern);
 
             Log("Button Clicked!");
