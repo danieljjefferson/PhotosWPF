@@ -25,7 +25,7 @@ namespace PhotosWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        StringBuilder logger = new StringBuilder();
+        static StringBuilder logger = new StringBuilder();
 
         private static String DEFAULT_SOURCE = @"C:\Users\Daniel\Pictures\Dump";
         private static String DEFAULT_DESTINATION = @"C:\Users\Daniel\Pictures\";
@@ -43,6 +43,15 @@ namespace PhotosWPF
             InitializeComponent();
 
             Source.TextChanged += Source_TextChanged;
+            IsVideos.Checked += IsVideos_Checked;
+        }
+
+        void IsVideos_Checked(object sender, RoutedEventArgs e)
+        {
+            if (IsVideos.IsChecked.Value)
+                Log("Looking for video files");
+            else
+                Log("Looking for photo files");
         }
 
         void Source_TextChanged(object sender, TextChangedEventArgs e)
@@ -167,9 +176,13 @@ namespace PhotosWPF
             }
         }
 
-        public void Log(String message)
+        public static void Log(String message)
         {
             logger.AppendLine(message);
+        }
+
+        private void LocalLog(String msg)
+        {
             LogBox.Text = logger.ToString();
         }
 
