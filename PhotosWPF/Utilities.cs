@@ -9,16 +9,19 @@ namespace PhotosWPF
 {
     static class Utilities
     {
-        public TextBox logBox;
+        private static TextBox _textBoxLog;
 
-        public static void SetupLogger(TextBox logTextBox)
+        public static void InitLogger(TextBox logbox)
         {
-            //TODO: Figure out how log to the Main Window from here
+            _textBoxLog = logbox;
         }
 
         public static void Log(String message)
         {
-
+            if (_textBoxLog.Text.Length > 1)
+                _textBoxLog.Text += "\n" + message;
+            else
+                _textBoxLog.Text += message;
         }
     }
 }

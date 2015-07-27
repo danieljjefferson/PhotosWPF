@@ -31,7 +31,7 @@ namespace PhotosWPF
         private static String DEFAULT_DESTINATION = @"C:\Users\Daniel\Pictures\";
         private static String images_pattern = @"\.jpg|\.cr2";
         private static String videos_pattern = @"\.mp4|\.mts|\.mov";
-        private static Regex r = new Regex(":");
+        
         
         private Regex type_regex;
 
@@ -41,6 +41,7 @@ namespace PhotosWPF
         public MainWindow()
         {
             InitializeComponent();
+            Utilities.InitLogger(LogBox);
 
             Source.TextChanged += Source_TextChanged;
             IsVideos.Checked += IsVideos_Checked;
@@ -49,9 +50,9 @@ namespace PhotosWPF
         void IsVideos_Checked(object sender, RoutedEventArgs e)
         {
             if (IsVideos.IsChecked.Value)
-                Log("Looking for video files");
+                Utilities.Log("Looking for video files");
             else
-                Log("Looking for photo files");
+                Utilities.Log("Looking for photo files");
         }
 
         void Source_TextChanged(object sender, TextChangedEventArgs e)
@@ -59,7 +60,7 @@ namespace PhotosWPF
             //if the source.text is empty then disable the run button
             if (Source.Text.Length < 1)
             {
-                Log("Source is Empty!");
+                Utilities.Log("Source is Empty!");
                 GoBtn.IsEnabled = false;
             }
             else if(!GoBtn.IsEnabled) //only enable the button if is disabled
@@ -73,9 +74,17 @@ namespace PhotosWPF
 
         private void Go_Click(object sender, RoutedEventArgs e)
         {
+            PhotoOrganizer po = new PhotoOrganizer();
+            
+            
             //get the source and destination
-            String src = Source.Text;
-            String dest = Destination.Text == "" ? Source.Text : Destination.Text;
+            po.Source = Source.Text;
+            po.Destination = Destination.Text == "" ? Source.Text : Destination.Text;
+            Utilities.Log("Source: " + po.Source);
+            Utilities.Log("Destination: " + po.Destination);
+
+            po.CreateDirectories();
+            return;
 
             //if photos are being organized the 'images_pattern' needs to be used.
             //videos are a slightly different problem since there does not seem to be any standard
@@ -83,16 +92,12 @@ namespace PhotosWPF
             //name which typically has the data as part of the file name
             type_regex = new Regex(images_pattern);
 
-            Log("Button Clicked!");
-            Log("Source: " + src);
-            Log("Destination: " + dest);
-
             try
             {
                 //TODO: Get files in sub folders
 
                 //get all files from the source
-                foreach (var filename in Directory.GetFiles(src))
+                foreach (var filename in Directory.GetFiles(po.Source))
                 {
                     var fileInfo = new FileInfo(filename);
                     if(type_regex.IsMatch(fileInfo.Extension.ToLower()))
@@ -102,16 +107,16 @@ namespace PhotosWPF
                             FileName = fileInfo.Name,
                             CreatedDate = fileInfo.CreationTime,
                             Extension = fileInfo.Extension,
-                            FullPath = fileInfo.FullName,
-                            PhotoTakenDate = GetDateTakenFromImage(fileInfo.FullName)
+                            FullPath = fileInfo.FullName
+                            //PhotoTakenDate = GetDateTakenFromImage(fileInfo.FullName)
                         });
                     }
-                    //Log(filename);
+                    //Utilities.Log(filename);
                 }
             }
             catch(DirectoryNotFoundException ex)
             {
-                Log(ex.Message);
+                Utilities.Log(ex.Message);
             }
 
             foreach(var photo in photos)
@@ -131,10 +136,10 @@ namespace PhotosWPF
 
             foreach(var list in photoDict)
             {
-                Log("Date: " + list.Key + " Photos: " + list.Value.Count);
+                Utilities.Log("Date: " + list.Key + " Photos: " + list.Value.Count);
             }
 
-            BuildFileSystem(dest);
+            //BuildFileSystem(dest);
 
         }
 
@@ -176,16 +181,6 @@ namespace PhotosWPF
             }
         }
 
-        public static void Log(String message)
-        {
-            logger.AppendLine(message);
-        }
-
-        private void LocalLog(String msg)
-        {
-            LogBox.Text = logger.ToString();
-        }
-
         private void CopyPhotos(List<MyImage> photos, String dest)
         {
             foreach(var file in photos)
@@ -214,7 +209,7 @@ namespace PhotosWPF
                     }
                     catch(IOException ioe2)
                     {
-                        Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
+                        Utilities.Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
                     }
                 }
             }
@@ -228,19 +223,6 @@ namespace PhotosWPF
         private void DumpBtn_Click(object sender, RoutedEventArgs e)
         {
             Source.Text = DEFAULT_SOURCE;
-        }
-
-        //retrieves the datetime WITHOUT loading the whole image
-        private static DateTime GetDateTakenFromImage(string path)
-        {
-
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-            using (System.Drawing.Image myImage = System.Drawing.Image.FromStream(fs, false, false))
-            {
-                PropertyItem propItem = myImage.GetPropertyItem(36867);
-                string dateTaken = r.Replace(Encoding.UTF8.GetString(propItem.Value), "-", 2);
-                return DateTime.Parse(dateTaken);
-            }
         }
     }
 
