@@ -28,7 +28,7 @@ namespace PhotosWPF
                     }
                     catch (IOException ioe2)
                     {
-                        Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
+                        //Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
                     }
                 }
             }
