@@ -138,14 +138,18 @@ namespace PhotosWPF
                 //the property that returns the date is not found so check the file name for a date string in the name
                 var fileInfo = new FileInfo(path);
                 Regex date_regex = new Regex(@"(19|20)\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])");
-                if(date_regex.IsMatch(fileInfo.Name))
+                if (date_regex.IsMatch(fileInfo.Name))
                 {
                     var date_match = date_regex.Match(fileInfo.Name);
-                    string year = date_match.Value.Substring(0, 3);
-                
-                    //TODO: This is where you were last. Parse the date from the name
+                    int year = Int32.Parse(date_match.Value.Substring(0, 4));
+                    int month = Int32.Parse(date_match.Value.Substring(4, 2));
+                    int day = Int32.Parse(date_match.Value.Substring(6, 2));
+
+                    //Utilities.Log(String.Format("File Name: {3} Date: {0}\\{1}\\{2}", day, month, year, fileInfo.Name));
+                    return new DateTime(year, month, day);
                 }
-                return new DateTime();
+                else
+                    return fileInfo.CreationTime.Date;
             }
         }
     }
