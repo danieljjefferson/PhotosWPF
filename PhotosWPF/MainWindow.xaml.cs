@@ -27,8 +27,8 @@ namespace PhotosWPF
     {
         static StringBuilder logger = new StringBuilder();
 
-        private static String DEFAULT_SOURCE = @"C:\Users\Daniel\Pictures\Dump";
-        private static String DEFAULT_DESTINATION = @"C:\Users\Daniel\Pictures\";
+        private static String DEFAULT_SOURCE = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Dump");
+        private static String DEFAULT_DESTINATION = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
         private static String images_pattern = @"\.jpg|\.cr2";
         private static String videos_pattern = @"\.mp4|\.mts|\.mov";
         
@@ -74,16 +74,15 @@ namespace PhotosWPF
 
         private void Go_Click(object sender, RoutedEventArgs e)
         {
-            PhotoOrganizer po = new PhotoOrganizer();
-            
-            
+            IFileOrganizer orgainizer = new PhotoOrganizer();
+           
             //get the source and destination
-            po.Source = Source.Text;
-            po.Destination = Destination.Text == "" ? Source.Text : Destination.Text;
-            Utilities.Log("Source: " + po.Source);
-            Utilities.Log("Destination: " + po.Destination);
+            orgainizer.Source = Source.Text;
+            orgainizer.Destination = Destination.Text == "" ? Source.Text : Destination.Text;
+            Utilities.Log("Source: " + orgainizer.Source);
+            Utilities.Log("Destination: " + orgainizer.Destination);
 
-            po.CreateDirectories();
+            orgainizer.CreateStructure();
             return;
 
             //if photos are being organized the 'images_pattern' needs to be used.
@@ -97,7 +96,7 @@ namespace PhotosWPF
                 //TODO: Get files in sub folders
 
                 //get all files from the source
-                foreach (var filename in Directory.GetFiles(po.Source))
+                foreach (var filename in Directory.GetFiles(orgainizer.Source))
                 {
                     var fileInfo = new FileInfo(filename);
                     if(type_regex.IsMatch(fileInfo.Extension.ToLower()))

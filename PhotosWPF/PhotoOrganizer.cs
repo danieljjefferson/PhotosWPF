@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
+using PhotosWPF.Model;
+
 namespace PhotosWPF
 {
     class PhotoOrganizer : IFileOrganizer
@@ -15,8 +17,9 @@ namespace PhotosWPF
         private string _source;
         private string _destination;
         private static Regex r = new Regex(":");
+        private static Regex photo_extensions = new Regex(@"\.jpg|\.cr2"); //TODO: allow users to configure image types
 
-        private Dictionary<DateTime, List<MyImage>> photoOrganization = new Dictionary<DateTime, List<MyImage>>();
+        private Dictionary<DateTime, List<SimplePhotoFile>> photoOrganization = new Dictionary<DateTime, List<SimplePhotoFile>>();
 
         #region Properties
         public string Source
@@ -43,54 +46,106 @@ namespace PhotosWPF
             }
         }
         #endregion
-        
-        public void MoveFiles(List<MyImage> files, string destination)
+
+        public void MoveFiles()
         {
-            foreach (var photo in files)
+            //foreach (var photo in files)
+            //{
+            //    string new_file = System.IO.Path.Combine(destination, photo.FileName);
+            //    try
+            //    {
+            //        File.Move(photo.FullPath, new_file);
+            //    }
+            //    catch (IOException ioe)
+            //    {
+            //        Directory.CreateDirectory(System.IO.Path.Combine(destination, "Duplicates"));
+            //        new_file = System.IO.Path.Combine(destination, "Duplicates", photo.FileName);
+            //        try
+            //        {
+            //            File.Move(photo.FullPath, new_file);
+            //        }
+            //        catch (IOException ioe2)
+            //        {
+            //            Utilities.Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
+            //        }
+            //    }
+            //}
+        }
+
+        public void CopyFiles()
+        {
+            //foreach (var photo in files)
+            //{
+            //    string new_file = System.IO.Path.Combine(destination, photo.FileName);
+            //    File.Copy(photo.FullPath, new_file);
+            //}
+        }
+
+        //create the structure for the files to be copied or moved.
+        public void CreateStructure()
+        {
+            Utilities.Log("Creating Directories in " + _destination);
+
+            /*  get the files so the date of each file can be grabbed and the correct
+             *  directory structure can be created */
+            foreach (var filename in Directory.GetFiles(_source))
             {
-                string new_file = System.IO.Path.Combine(destination, photo.FileName);
-                try
+                var fileInfo = new FileInfo(filename);
+                if (photo_extensions.IsMatch(fileInfo.Extension.ToLower())) //only grab files that match the expected extension
                 {
-                    File.Move(photo.FullPath, new_file);
-                }
-                catch (IOException ioe)
-                {
-                    Directory.CreateDirectory(System.IO.Path.Combine(destination, "Duplicates"));
-                    new_file = System.IO.Path.Combine(destination, "Duplicates", photo.FileName);
-                    try
+                    SimplePhotoFile photo = new SimplePhotoFile()
                     {
-                        File.Move(photo.FullPath, new_file);
-                    }
-                    catch (IOException ioe2)
+                        FileName = fileInfo.Name,
+                        Extension = fileInfo.Extension,
+                        FullPath = fileInfo.FullName,
+                        CreatedDate = fileInfo.CreationTime,
+                        PhotoTakenDate = GetDateTaken(fileInfo.FullName)
+                    };
+
+                    //if the dictionary already has a list for that date then add the photo to the list. otherwise create a new list and add the photo
+                    if (photoOrganization.Keys.Contains(photo.PhotoTakenDate.Date))
+                        photoOrganization.First(d => d.Key == photo.PhotoTakenDate.Date).Value.Add(photo);
+                    else
                     {
-                        Utilities.Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
+                        var new_list = new List<SimplePhotoFile>();
+                        new_list.Add(photo);
+                        photoOrganization.Add(photo.PhotoTakenDate.Date, new_list);
                     }
                 }
             }
-        }
 
-        public void CopyFiles(List<MyImage> files, string destination)
-        {
-            foreach (var photo in files)
+            //output the structure to the log
+            foreach (var list in photoOrganization)
             {
-                string new_file = System.IO.Path.Combine(destination, photo.FileName);
-                File.Copy(photo.FullPath, new_file);
+                Utilities.Log("Date: " + list.Key + " Photos: " + list.Value.Count);
             }
-        }
-
-        public void CreateDirectories()
-        {
-            Utilities.Log("Creating Directories...");
         }
 
         public DateTime GetDateTaken(string path)
         {
-            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-            using (System.Drawing.Image myImage = System.Drawing.Image.FromStream(fs, false, false))
+            try
             {
-                PropertyItem propItem = myImage.GetPropertyItem(36867);
-                string dateTaken = r.Replace(Encoding.UTF8.GetString(propItem.Value), "-", 2);
-                return DateTime.Parse(dateTaken);
+                using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+                using (System.Drawing.Image myImage = System.Drawing.Image.FromStream(fs, false, false))
+                {
+                    PropertyItem propItem = myImage.GetPropertyItem(36867);
+                    string dateTaken = r.Replace(Encoding.UTF8.GetString(propItem.Value), "-", 2);
+                    return DateTime.Parse(dateTaken);
+                }
+            }
+            catch(ArgumentException ae)
+            {
+                //the property that returns the date is not found so check the file name for a date string in the name
+                var fileInfo = new FileInfo(path);
+                Regex date_regex = new Regex(@"(19|20)\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])");
+                if(date_regex.IsMatch(fileInfo.Name))
+                {
+                    var date_match = date_regex.Match(fileInfo.Name);
+                    string year = date_match.Value.Substring(0, 3);
+                
+                    //TODO: This is where you were last. Parse the date from the name
+                }
+                return new DateTime();
             }
         }
     }

@@ -5,16 +5,38 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
+using PhotosWPF.Model;
+
 namespace PhotosWPF
 {
     interface IFileOrganizer
     {
+        //Source Directory of the files to be organized
         String Source {get; set; }
+
+        //Destination Directory of the files to be organized. If this is empty/null then the Destincatin will be the Source.
         String Destination { get; set; }
 
-        void MoveFiles(List<MyImage> files, String destination);
-        void CopyFiles(List<MyImage> files, String destination);
-        void CreateDirectories();
+        /// <summary>
+        /// Move the file to the Destination.  If the Destination does not exist, create it.
+        /// </summary>
+        void MoveFiles();
+
+        /// <summary>
+        /// Copy the files to the Destination. If the Destination does not exist, create it.
+        /// </summary>
+        void CopyFiles();
+
+        /// <summary>
+        /// Gets the files (of the correct type) and adds them to a dictionary where the Key is the created date of the file
+        /// </summary>
+        void CreateStructure();
+
+        /// <summary>
+        /// Get the actual date of creation for the file. For photos and videos this can be the EXIF data or parsing the file name
+        /// </summary>
+        /// <param name="pathToFile">Full path to the file that needs an actual creation date</param>
+        /// <returns>DateTime of the actual creation date</returns>
         DateTime GetDateTaken(String pathToFile);
     }
 }
