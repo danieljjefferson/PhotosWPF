@@ -29,14 +29,8 @@ namespace PhotosWPF
 
         private static String DEFAULT_SOURCE = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Dump");
         private static String DEFAULT_DESTINATION = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-        private static String images_pattern = @"\.jpg|\.cr2";
-        private static String videos_pattern = @"\.mp4|\.mts|\.mov";
-        
-        
-        private Regex type_regex;
-
-        private List<MyImage> photos = new List<MyImage>();
-        private Dictionary<DateTime, List<MyImage>> photoDict = new Dictionary<DateTime, List<MyImage>>();
+        //private static String images_pattern = @"\.jpg|\.cr2";
+        //private static String videos_pattern = @"\.mp4|\.mts|\.mov";
 
         public MainWindow()
         {
@@ -83,135 +77,7 @@ namespace PhotosWPF
             Utilities.Log("Destination: " + orgainizer.Destination);
 
             orgainizer.CreateStructure();
-            return;
-
-            //if photos are being organized the 'images_pattern' needs to be used.
-            //videos are a slightly different problem since there does not seem to be any standard
-            //of how the date created is written.  I could possibly use the "Modifed Date" and match that against the file
-            //name which typically has the data as part of the file name
-            type_regex = new Regex(images_pattern);
-
-            try
-            {
-                //TODO: Get files in sub folders
-
-                //get all files from the source
-                foreach (var filename in Directory.GetFiles(orgainizer.Source))
-                {
-                    var fileInfo = new FileInfo(filename);
-                    if(type_regex.IsMatch(fileInfo.Extension.ToLower()))
-                    {
-                        photos.Add(new MyImage
-                        {
-                            FileName = fileInfo.Name,
-                            CreatedDate = fileInfo.CreationTime,
-                            Extension = fileInfo.Extension,
-                            FullPath = fileInfo.FullName
-                            //PhotoTakenDate = GetDateTakenFromImage(fileInfo.FullName)
-                        });
-                    }
-                    //Utilities.Log(filename);
-                }
-            }
-            catch(DirectoryNotFoundException ex)
-            {
-                Utilities.Log(ex.Message);
-            }
-
-            foreach(var photo in photos)
-            {
-                if(photoDict.Keys.Contains(photo.PhotoTakenDate.Date))
-                {
-                    var dated_Photos = photoDict.First(k => k.Key == photo.PhotoTakenDate.Date).Value;
-                    dated_Photos.Add(photo);
-                }
-                else
-                {
-                    List<MyImage> new_photos = new List<MyImage>();
-                    new_photos.Add(photo);
-                    photoDict.Add(photo.PhotoTakenDate.Date, new_photos);
-                }
-            }
-
-            foreach(var list in photoDict)
-            {
-                Utilities.Log("Date: " + list.Key + " Photos: " + list.Value.Count);
-            }
-
-            //BuildFileSystem(dest);
-
-        }
-
-        private void BuildFileSystem(string destination)
-        {
-            string year, month, day;
-            
-
-            foreach(var list in photoDict)
-            {
-                StringBuilder path = new StringBuilder(destination);
-                year = list.Key.Year.ToString();
-                month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
-                path.Append("\\").Append(year);
-
-                ////create a 'Duplicates' folder in each 'Year' to catch possible duplicate files
-                //string duplicate_path = System.IO.Path.Combine(path.ToString(), "Duplicates");
-                //if (!Directory.Exists(duplicate_path))
-                //    Directory.CreateDirectory(duplicate_path);
-
-                if(list.Value.Count >= 5) //5 or more photos from a specific date
-                {
-                    day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
-                    path.Append("\\").Append(month).Append(".").Append(day).Append(" (Description Needed)");
-                }
-                else
-                {
-                    path.Append("\\").Append(month).Append(" Misc");
-                }
-
-                if (!Directory.Exists(path.ToString()))
-                    Directory.CreateDirectory(path.ToString());
-
-                if(true)
-                    MovePhotos(list.Value, path.ToString());
-                else
-                    CopyPhotos(list.Value, path.ToString());
-                path = null;
-            }
-        }
-
-        private void CopyPhotos(List<MyImage> photos, String dest)
-        {
-            foreach(var file in photos)
-            {
-                string new_file = System.IO.Path.Combine(dest, file.FileName);
-                File.Copy(file.FullPath, new_file);
-            }
-        }
-
-        private void MovePhotos(List<MyImage> photos, String dest)
-        {
-            foreach (var file in photos)
-            {
-                string new_file = System.IO.Path.Combine(dest, file.FileName);
-                try
-                {
-                    File.Move(file.FullPath, new_file);
-                }
-                catch(IOException ioe)
-                {
-                    Directory.CreateDirectory(System.IO.Path.Combine(dest, "Duplicates"));
-                    new_file = System.IO.Path.Combine(dest, "Duplicates", file.FileName);
-                    try
-                    {
-                        File.Move(file.FullPath, new_file);
-                    }
-                    catch(IOException ioe2)
-                    {
-                        Utilities.Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
-                    }
-                }
-            }
+            orgainizer.OrganizeFiles();
         }
 
         private void PhotosBtn_Click(object sender, RoutedEventArgs e)
@@ -223,14 +89,5 @@ namespace PhotosWPF
         {
             Source.Text = DEFAULT_SOURCE;
         }
-    }
-
-    public class MyImage
-    {
-        public String FileName { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public DateTime PhotoTakenDate { get; set; }
-        public String Extension { get; set; }
-        public String FullPath { get; set; }
     }
 }

@@ -14,12 +14,14 @@ namespace PhotosWPF
 {
     class PhotoOrganizer : IFileOrganizer
     {
+        #region Private Variables
         private string _source;
         private string _destination;
         private static Regex r = new Regex(":");
         private static Regex photo_extensions = new Regex(@"\.jpg|\.cr2"); //TODO: allow users to configure image types
 
         private Dictionary<DateTime, List<SimplePhotoFile>> photoOrganization = new Dictionary<DateTime, List<SimplePhotoFile>>();
+        #endregion
 
         #region Properties
         public string Source
@@ -47,41 +49,41 @@ namespace PhotosWPF
         }
         #endregion
 
-        public void MoveFiles()
+        /// <summary>
+        /// Create the folder structure and move or copy the files to the new structure
+        /// </summary>
+        public void OrganizeFiles()
         {
-            //foreach (var photo in files)
-            //{
-            //    string new_file = System.IO.Path.Combine(destination, photo.FileName);
-            //    try
-            //    {
-            //        File.Move(photo.FullPath, new_file);
-            //    }
-            //    catch (IOException ioe)
-            //    {
-            //        Directory.CreateDirectory(System.IO.Path.Combine(destination, "Duplicates"));
-            //        new_file = System.IO.Path.Combine(destination, "Duplicates", photo.FileName);
-            //        try
-            //        {
-            //            File.Move(photo.FullPath, new_file);
-            //        }
-            //        catch (IOException ioe2)
-            //        {
-            //            Utilities.Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
-            //        }
-            //    }
-            //}
+            Utilities.Log("Organizing files");
+            foreach (var list in photoOrganization)
+            foreach(var photo in list.Value)
+            {
+                string path;
+                string year = list.Key.Year.ToString();
+                string month = month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
+                string day = day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
+
+                if(list.Value.Count >= 5)
+                    path = System.IO.Path.Combine(Destination, year, String.Format("{0}.{1} (Description)", month, day));
+                else
+                    path = System.IO.Path.Combine(Destination, year, String.Format("{0} Misc", month));
+
+                if (!Directory.Exists(path.ToString()))
+                    Directory.CreateDirectory(path.ToString());
+
+                string new_file = System.IO.Path.Combine(path, photo.FileName);
+
+                if(true)
+                    File.Copy(photo.FullPath, new_file);
+                else
+                    File.Move(photo.FullPath, new_file);
+            }
+                
         }
 
-        public void CopyFiles()
-        {
-            //foreach (var photo in files)
-            //{
-            //    string new_file = System.IO.Path.Combine(destination, photo.FileName);
-            //    File.Copy(photo.FullPath, new_file);
-            //}
-        }
-
-        //create the structure for the files to be copied or moved.
+        /// <summary>
+        /// Creates the structure for the files that need to be copied
+        /// </summary>
         public void CreateStructure()
         {
             Utilities.Log("Creating Directories in " + _destination);
@@ -121,6 +123,11 @@ namespace PhotosWPF
             }
         }
 
+        /// <summary>
+        /// Returns the creation date of the Photo.  The creation date is pulled from either the EXIF data, file name or created date
+        /// </summary>
+        /// <param name="path">Path to the file</param>
+        /// <returns>The file's created date as a DateTime</returns>
         public DateTime GetDateTaken(string path)
         {
             try
@@ -135,6 +142,7 @@ namespace PhotosWPF
             }
             catch(ArgumentException ae)
             {
+                Utilities.Log("EXIF data not found: " + ae.Message);
                 //the property that returns the date is not found so check the file name for a date string in the name
                 var fileInfo = new FileInfo(path);
                 Regex date_regex = new Regex(@"(19|20)\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])");

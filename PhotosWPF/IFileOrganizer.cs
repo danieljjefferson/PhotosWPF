@@ -18,14 +18,9 @@ namespace PhotosWPF
         String Destination { get; set; }
 
         /// <summary>
-        /// Move the file to the Destination.  If the Destination does not exist, create it.
+        /// Organize the files to the Destination.  If the Destination does not exist, create it.
         /// </summary>
-        void MoveFiles();
-
-        /// <summary>
-        /// Copy the files to the Destination. If the Destination does not exist, create it.
-        /// </summary>
-        void CopyFiles();
+        void OrganizeFiles();
 
         /// <summary>
         /// Gets the files (of the correct type) and adds them to a dictionary where the Key is the created date of the file
