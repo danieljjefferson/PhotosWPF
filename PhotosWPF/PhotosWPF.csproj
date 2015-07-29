@@ -57,6 +57,7 @@
     <Compile Include="Model\SimpleMediaFile.cs" />
     <Compile Include="Model\SimplePhotoFile.cs" />
     <Compile Include="Utilities.cs" />
+    <Compile Include="VideoOrganizer.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

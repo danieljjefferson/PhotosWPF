@@ -6,25 +6,23 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 
 using PhotosWPF.Model;
 
 namespace PhotosWPF
 {
-    class PhotoOrganizer : IFileOrganizer
+    class VideoOrganizer : IFileOrganizer
     {
         #region Private Variables
         private string _source;
         private string _destination;
         private bool _iscopy;
         private static Regex r = new Regex(":");
-        private static Regex photo_extensions = new Regex(@"\.jpg|\.cr2"); //TODO: allow users to configure image types
+        private static Regex video_extensions = new Regex(@"\.mp4|\.mts|\.mov"); //TODO: allow users to configure image types
 
         private Dictionary<DateTime, List<SimplePhotoFile>> photoOrganization = new Dictionary<DateTime, List<SimplePhotoFile>>();
         #endregion
 
-        #region Properties
         public string Source
         {
             get
@@ -49,16 +47,18 @@ namespace PhotosWPF
             }
         }
 
-        public Boolean IsCopy
+        public bool IsCopy
         {
-            get { return _iscopy; }
-            set { _iscopy = value; }
+            get
+            {
+                return _iscopy;
+            }
+            set
+            {
+                _iscopy = value;
+            }
         }
-        #endregion
 
-        /// <summary>
-        /// Create the folder structure and move or copy the files to the new structure
-        /// </summary>
         public void OrganizeFiles()
         {
             Utilities.Log("Organizing files");
@@ -87,9 +87,6 @@ namespace PhotosWPF
                 }
         }
 
-        /// <summary>
-        /// Creates the structure for the files that need to be copied
-        /// </summary>
         public void CreateStructure()
         {
             Utilities.Log("Creating Directories in " + _destination);
@@ -99,7 +96,7 @@ namespace PhotosWPF
             foreach (var filename in Directory.GetFiles(_source))
             {
                 var fileInfo = new FileInfo(filename);
-                if (photo_extensions.IsMatch(fileInfo.Extension.ToLower())) //only grab files that match the expected extension
+                if (video_extensions.IsMatch(fileInfo.Extension.ToLower())) //only grab files that match the expected extension
                 {
                     SimplePhotoFile photo = new SimplePhotoFile()
                     {
@@ -136,36 +133,39 @@ namespace PhotosWPF
         /// <returns>The file's created date as a DateTime</returns>
         public DateTime GetDateTaken(string path)
         {
-            try
+            //Utilities.Log("EXIF data not found: " + ae.Message);
+            //the property that returns the date is not found so check the file name for a date string in the name
+            var fileInfo = new FileInfo(path);
+            Regex date_regex = new Regex(@"(19|20)\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])");
+            if (date_regex.IsMatch(fileInfo.Name))
             {
-                using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
-                using (System.Drawing.Image myImage = System.Drawing.Image.FromStream(fs, false, false))
-                {
-                    PropertyItem propItem = myImage.GetPropertyItem(36867);
-                    string dateTaken = r.Replace(Encoding.UTF8.GetString(propItem.Value), "-", 2);
-                    return DateTime.Parse(dateTaken);
-                }
-            }
-            catch (ArgumentException ae)
-            {
-                Utilities.Log("EXIF data not found: " + ae.Message);
-                //the property that returns the date is not found so check the file name for a date string in the name
-                var fileInfo = new FileInfo(path);
-                Regex date_regex = new Regex(@"(19|20)\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])");
-                if (date_regex.IsMatch(fileInfo.Name))
-                {
-                    var date_match = date_regex.Match(fileInfo.Name);
-                    int year = Int32.Parse(date_match.Value.Substring(0, 4));
-                    int month = Int32.Parse(date_match.Value.Substring(4, 2));
-                    int day = Int32.Parse(date_match.Value.Substring(6, 2));
+                var date_match = date_regex.Match(fileInfo.Name);
+                int year = Int32.Parse(date_match.Value.Substring(0, 4));
+                int month = Int32.Parse(date_match.Value.Substring(4, 2));
+                int day = Int32.Parse(date_match.Value.Substring(6, 2));
 
-                    //Utilities.Log(String.Format("File Name: {3} Date: {0}\\{1}\\{2}", day, month, year, fileInfo.Name));
-                    return new DateTime(year, month, day);
-                }
-                //returns the earlier creation date or modifed date
-                else
-                    return DateTime.Compare(fileInfo.CreationTime.Date, fileInfo.LastWriteTime.Date) > 0 ? fileInfo.LastWriteTime.Date : fileInfo.CreationTime.Date;
+                //Utilities.Log(String.Format("File Name: {3} Date: {0}\\{1}\\{2}", day, month, year, fileInfo.Name));
+                return new DateTime(year, month, day);
             }
+            //returns the earlier creation date or modifed date
+            else
+                return DateTime.Compare(fileInfo.CreationTime.Date, fileInfo.LastWriteTime.Date) > 0 ? fileInfo.LastWriteTime.Date : fileInfo.CreationTime.Date;
+
+            ////try getting the EXIF property otherwise 
+            //try
+            //{
+            //    using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            //    using (System.Drawing.Image myImage = System.Drawing.Image.FromStream(fs, false, false))
+            //    {
+            //        PropertyItem propItem = myImage.GetPropertyItem(36867);
+            //        string dateTaken = r.Replace(Encoding.UTF8.GetString(propItem.Value), "-", 2);
+            //        return DateTime.Parse(dateTaken);
+            //    }
+            //}
+            //catch (ArgumentException ae) //if the EXIF property is unavailable then use the filename or created date as a last resort
+            //{
+                
+            //}
         }
     }
 }
