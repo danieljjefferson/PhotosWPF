@@ -17,6 +17,7 @@ namespace PhotosWPF
         private string _source;
         private string _destination;
         private bool _iscopy;
+        private int _filecount = 4;
         private static Regex r = new Regex(":");
         private static Regex video_extensions = new Regex(@"\.mp4|\.mts|\.mov"); //TODO: allow users to configure image types
 
@@ -59,6 +60,12 @@ namespace PhotosWPF
             }
         }
 
+        public int FileCount
+        {
+            get { return _filecount; }
+            set { _filecount = value; }
+        }
+
         public void OrganizeFiles()
         {
             Utilities.Log("Organizing files");
@@ -70,7 +77,7 @@ namespace PhotosWPF
                     string month = month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
                     string day = day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
 
-                    if (list.Value.Count >= 5)
+                    if (list.Value.Count >= _filecount)
                         path = System.IO.Path.Combine(Destination, year, String.Format("{0}.{1} (Description)", month, day));
                     else
                         path = System.IO.Path.Combine(Destination, year, String.Format("{0} Misc", month));
@@ -80,11 +87,34 @@ namespace PhotosWPF
 
                     string new_file = System.IO.Path.Combine(path, photo.FileName);
 
-                    if (_iscopy)
-                        File.Copy(photo.FullPath, new_file);
-                    else
-                        File.Move(photo.FullPath, new_file);
+                    try
+                    {
+                        if (_iscopy)
+                            File.Copy(photo.FullPath, new_file);
+                        else
+                            File.Move(photo.FullPath, new_file);
+                    }
+                    catch(IOException ioe)
+                    {
+                        Directory.CreateDirectory(System.IO.Path.Combine(_destination, "Duplicates"));
+                        new_file = System.IO.Path.Combine(_destination, "Duplicates", photo.FileName);
+                        try
+                        {
+                            if (_iscopy)
+                                File.Copy(photo.FullPath, new_file);
+                            else
+                                File.Move(photo.FullPath, new_file);
+                        }
+                        catch (IOException ioe2)
+                        {
+                            Utilities.Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
+                        }
+                    }
+                    
                 }
+
+            photoOrganization.Clear();
+            Utilities.Log("Organization Done!");
         }
 
         public void CreateStructure()
@@ -164,7 +194,7 @@ namespace PhotosWPF
             //}
             //catch (ArgumentException ae) //if the EXIF property is unavailable then use the filename or created date as a last resort
             //{
-                
+
             //}
         }
     }

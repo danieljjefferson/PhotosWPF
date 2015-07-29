@@ -25,20 +25,26 @@ namespace PhotosWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static String DEFAULT_SOURCE = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Dump");
-        private static String DEFAULT_DESTINATION = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-        //private static String images_pattern = @"\.jpg|\.cr2";
-        //private static String videos_pattern = @"\.mp4|\.mts|\.mov";
+        private static String DEFAULT_PHOTOS_SOURCE = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Staging");
+        private static String DEFAULT_VIDEOS_SOURCE = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Staging");
+        
+        private static String DEFAULT_PHOTOS_DESTINATION = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+        private static String DEFAULT_VIDEOS_DESTINATION = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
 
         public MainWindow()
         {
             InitializeComponent();
             Utilities.InitLogger(LogBox);
 
+            DefaultDestBtn.Click += DefaultDestBtn_Click;
+            DefaultSourceBtn.Click += DefaultSourceBtn_Click;
+
             Source.TextChanged += Source_TextChanged;
             IsVideos.Checked += IsVideos_Checked;
             IsCopy.Checked += IsCopy_Checked;
         }
+
+        
 
         void IsCopy_Checked(object sender, RoutedEventArgs e)
         {
@@ -51,7 +57,10 @@ namespace PhotosWPF
         void IsVideos_Checked(object sender, RoutedEventArgs e)
         {
             if (IsVideos.IsChecked.Value)
+            {
                 Utilities.Log("Looking for video files");
+            }
+                
             else
                 Utilities.Log("Looking for photo files");
         }
@@ -75,7 +84,11 @@ namespace PhotosWPF
 
         private void Go_Click(object sender, RoutedEventArgs e)
         {
-            IFileOrganizer orgainizer = new PhotoOrganizer();
+            IFileOrganizer orgainizer;
+            if(IsVideos.IsChecked.Value)
+                orgainizer = new VideoOrganizer();
+            else
+                orgainizer = new PhotoOrganizer();
            
             //get the source and destination
             orgainizer.Source = Source.Text;
@@ -88,14 +101,16 @@ namespace PhotosWPF
             orgainizer.OrganizeFiles();
         }
 
-        private void PhotosBtn_Click(object sender, RoutedEventArgs e)
+        #region Button Click Handlers
+        void DefaultSourceBtn_Click(object sender, RoutedEventArgs e)
         {
-            Destination.Text = DEFAULT_DESTINATION;
+            Source.Text = DEFAULT_PHOTOS_SOURCE;
         }
 
-        private void DumpBtn_Click(object sender, RoutedEventArgs e)
+        private void DefaultDestBtn_Click(object sender, RoutedEventArgs e)
         {
-            Source.Text = DEFAULT_SOURCE;
+            Destination.Text = DEFAULT_PHOTOS_DESTINATION;
         }
+        #endregion
     }
 }

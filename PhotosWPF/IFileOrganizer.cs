@@ -20,6 +20,9 @@ namespace PhotosWPF
         //If the files should be copied instead of moved this will be true
         Boolean IsCopy { get; set; }
 
+        //number of files that should be grouped together
+        int FileCount { get; set; }
+
         /// <summary>
         /// Organize the files to the Destination.  If the Destination does not exist, create it.
         /// </summary>

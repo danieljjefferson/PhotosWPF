@@ -18,8 +18,9 @@ namespace PhotosWPF
         private string _source;
         private string _destination;
         private bool _iscopy;
+        private int _filecount = 5;
         private static Regex r = new Regex(":");
-        private static Regex photo_extensions = new Regex(@"\.jpg|\.cr2"); //TODO: allow users to configure image types
+        private static Regex photo_extensions = new Regex(@"\.jpg|\.cr2|\.jpeg"); //TODO: allow users to configure image types
 
         private Dictionary<DateTime, List<SimplePhotoFile>> photoOrganization = new Dictionary<DateTime, List<SimplePhotoFile>>();
         #endregion
@@ -54,6 +55,12 @@ namespace PhotosWPF
             get { return _iscopy; }
             set { _iscopy = value; }
         }
+
+        public int FileCount
+        {
+            get { return _filecount; }
+            set { _filecount = value; }
+        }
         #endregion
 
         /// <summary>
@@ -70,7 +77,7 @@ namespace PhotosWPF
                     string month = month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
                     string day = day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
 
-                    if (list.Value.Count >= 5)
+                    if (list.Value.Count >= _filecount)
                         path = System.IO.Path.Combine(Destination, year, String.Format("{0}.{1} (Description)", month, day));
                     else
                         path = System.IO.Path.Combine(Destination, year, String.Format("{0} Misc", month));
@@ -80,11 +87,33 @@ namespace PhotosWPF
 
                     string new_file = System.IO.Path.Combine(path, photo.FileName);
 
-                    if (_iscopy)
-                        File.Copy(photo.FullPath, new_file);
-                    else
-                        File.Move(photo.FullPath, new_file);
+                    try
+                    {
+                        if (_iscopy)
+                            File.Copy(photo.FullPath, new_file);
+                        else
+                            File.Move(photo.FullPath, new_file);
+                    }
+                    catch (IOException ioe)
+                    {
+                        Directory.CreateDirectory(System.IO.Path.Combine(_destination, "Duplicates"));
+                        new_file = System.IO.Path.Combine(_destination, "Duplicates", photo.FileName);
+                        try
+                        {
+                            if (_iscopy)
+                                File.Copy(photo.FullPath, new_file);
+                            else
+                                File.Move(photo.FullPath, new_file);
+                        }
+                        catch (IOException ioe2)
+                        {
+                            Utilities.Log("Attempted to move into 'Duplicates' folder. " + ioe2.Message);
+                        }
+                    }
                 }
+
+            photoOrganization.Clear();
+            Utilities.Log("Organization Done!");
         }
 
         /// <summary>
