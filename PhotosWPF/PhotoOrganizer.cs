@@ -17,6 +17,7 @@ namespace PhotosWPF
         #region Private Variables
         private string _source;
         private string _destination;
+        private bool _iscopy;
         private static Regex r = new Regex(":");
         private static Regex photo_extensions = new Regex(@"\.jpg|\.cr2"); //TODO: allow users to configure image types
 
@@ -47,6 +48,12 @@ namespace PhotosWPF
                 _destination = value;
             }
         }
+
+        public Boolean IsCopy
+        {
+            get { return _iscopy; }
+            set { _iscopy = value; }
+        }
         #endregion
 
         /// <summary>
@@ -56,29 +63,29 @@ namespace PhotosWPF
         {
             Utilities.Log("Organizing files");
             foreach (var list in photoOrganization)
-            foreach(var photo in list.Value)
-            {
-                string path;
-                string year = list.Key.Year.ToString();
-                string month = month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
-                string day = day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
+                foreach (var photo in list.Value)
+                {
+                    string path;
+                    string year = list.Key.Year.ToString();
+                    string month = month = list.Key.Month < 10 ? "0" + list.Key.Month : list.Key.Month.ToString();
+                    string day = day = list.Key.Day < 10 ? "0" + list.Key.Day : list.Key.Day.ToString();
 
-                if(list.Value.Count >= 5)
-                    path = System.IO.Path.Combine(Destination, year, String.Format("{0}.{1} (Description)", month, day));
-                else
-                    path = System.IO.Path.Combine(Destination, year, String.Format("{0} Misc", month));
+                    if (list.Value.Count >= 5)
+                        path = System.IO.Path.Combine(Destination, year, String.Format("{0}.{1} (Description)", month, day));
+                    else
+                        path = System.IO.Path.Combine(Destination, year, String.Format("{0} Misc", month));
 
-                if (!Directory.Exists(path.ToString()))
-                    Directory.CreateDirectory(path.ToString());
+                    if (!Directory.Exists(path.ToString()))
+                        Directory.CreateDirectory(path.ToString());
 
-                string new_file = System.IO.Path.Combine(path, photo.FileName);
+                    string new_file = System.IO.Path.Combine(path, photo.FileName);
 
-                if(true)
-                    File.Copy(photo.FullPath, new_file);
-                else
-                    File.Move(photo.FullPath, new_file);
-            }
-                
+                    if (_iscopy)
+                        File.Copy(photo.FullPath, new_file);
+                    else
+                        File.Move(photo.FullPath, new_file);
+                }
+
         }
 
         /// <summary>
@@ -140,7 +147,7 @@ namespace PhotosWPF
                     return DateTime.Parse(dateTaken);
                 }
             }
-            catch(ArgumentException ae)
+            catch (ArgumentException ae)
             {
                 Utilities.Log("EXIF data not found: " + ae.Message);
                 //the property that returns the date is not found so check the file name for a date string in the name
@@ -156,8 +163,9 @@ namespace PhotosWPF
                     //Utilities.Log(String.Format("File Name: {3} Date: {0}\\{1}\\{2}", day, month, year, fileInfo.Name));
                     return new DateTime(year, month, day);
                 }
+                //returns the earlier creation date or modifed date
                 else
-                    return fileInfo.CreationTime.Date;
+                    return DateTime.Compare(fileInfo.CreationTime.Date, fileInfo.LastWriteTime.Date) > 0 ? fileInfo.LastWriteTime.Date : fileInfo.CreationTime.Date;
             }
         }
     }

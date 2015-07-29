@@ -17,6 +17,9 @@ namespace PhotosWPF
         //Destination Directory of the files to be organized. If this is empty/null then the Destincatin will be the Source.
         String Destination { get; set; }
 
+        //If the files should be copied instead of moved this will be true
+        Boolean IsCopy { get; set; }
+
         /// <summary>
         /// Organize the files to the Destination.  If the Destination does not exist, create it.
         /// </summary>

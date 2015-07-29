@@ -12,6 +12,6 @@
         <Button Content="Dump" HorizontalAlignment="Left" Margin="426,10,0,0" VerticalAlignment="Top" Width="81" Height="23" Click="DumpBtn_Click"/>
         <Button Content="Photos" HorizontalAlignment="Left" Margin="426,38,0,0" VerticalAlignment="Top" Width="81" Height="23" Click="PhotosBtn_Click"/>
         <CheckBox Name="IsVideos" Content="Videos" HorizontalAlignment="Left" Margin="451,66,0,0" VerticalAlignment="Top"/>
-
+        <CheckBox Name="IsCopy" Content="Copy Files" HorizontalAlignment="Left" Margin="375,66,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

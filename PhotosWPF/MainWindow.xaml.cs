@@ -25,8 +25,6 @@ namespace PhotosWPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        static StringBuilder logger = new StringBuilder();
-
         private static String DEFAULT_SOURCE = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Dump");
         private static String DEFAULT_DESTINATION = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
         //private static String images_pattern = @"\.jpg|\.cr2";
@@ -39,6 +37,15 @@ namespace PhotosWPF
 
             Source.TextChanged += Source_TextChanged;
             IsVideos.Checked += IsVideos_Checked;
+            IsCopy.Checked += IsCopy_Checked;
+        }
+
+        void IsCopy_Checked(object sender, RoutedEventArgs e)
+        {
+            if (IsCopy.IsChecked.Value)
+            {
+                Utilities.Log("Files will only be copied");
+            }
         }
 
         void IsVideos_Checked(object sender, RoutedEventArgs e)
@@ -73,6 +80,7 @@ namespace PhotosWPF
             //get the source and destination
             orgainizer.Source = Source.Text;
             orgainizer.Destination = Destination.Text == "" ? Source.Text : Destination.Text;
+            orgainizer.IsCopy = IsCopy.IsChecked.Value;
             Utilities.Log("Source: " + orgainizer.Source);
             Utilities.Log("Destination: " + orgainizer.Destination);
 
