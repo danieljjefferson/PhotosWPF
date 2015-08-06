@@ -42,9 +42,7 @@ namespace PhotosWPF
             Source.TextChanged += Source_TextChanged;
             IsVideos.Checked += IsVideos_Checked;
             IsCopy.Checked += IsCopy_Checked;
-        }
-
-        
+        }        
 
         void IsCopy_Checked(object sender, RoutedEventArgs e)
         {
